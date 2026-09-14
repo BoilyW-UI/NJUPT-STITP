@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}登录{% endblock %}
+{% load static %}
+{% block extrahead %}
+    <script src="{% static "assets/js/jquery-confirm.min.js" %}"></script>
+    <script src="{% static "assets/js/gt.js" %}"></script>
+    <link href="{% static "assets/css/jquery-confirm.min.css" %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<style>
+    #mask {
+        display: none;
+        position: fixed;
+        text-align: center;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+        z-index: 9999;
+    }
+    #popup-captcha-mobile {
+        position: fixed;
+        display: none;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        -webkit-transform: translate(-50%, -50%);
+        z-index: 9999;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-6 col-md-offset-3">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h1 class="panel-title">账号登录</h1>
+            </div>
+            <div class="panel-body">
+                <form id="vmaig-auth-login-form" class="clearfix" method="post" role="form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="glyphicon glyphicon-user"></span>
+                            </div>
+                            <input id="vmaig-auth-login-username" type="text" class="form-control" placeholder="请输入账号、学号或邮箱">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="glyphicon glyphicon-lock"></span>
+                            </div>
+                            <input id="vmaig-auth-login-password" type="password" class="form-control" placeholder="请输入密码">
+                        </div>
+                    </div>
+                    <div id="vmaig-auth-forgetpassword"><a href="{% url 'forget_password' %}">忘记密码？</a></div>
+                    <button id="vmaig-auth-login-button" type="submit" class="btn btn-vmaig-auth pull-left">登录</button>
+                    <a href="{% url 'register' %}" type="button" class="btn btn-vmaig-auth pull-right">注册</a>
+                    <div id="mask"></div>
+                    <div id="popup-captcha-mobile"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script language="javascript" type="text/javascript">
+    $("#mask").click(function () {
+        $("#mask, #popup-captcha-mobile").hide();
+    });
+    $('#vmaig-auth-login-form').submit(function (e) {
+        e = e || window.event;
+        e.preventDefault();
+        $("#mask, #popup-captcha-mobile").show();
+    });
+
+    function geturl(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]);
+        return "{% url 'index' %}";
+    }
+
+    var handlerPopupMobile = function (captchaObj) {
+        $.ajaxSetup({
+            data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+        });
+
+        captchaObj.appendTo("#popup-captcha-mobile");
+        captchaObj.onSuccess(function () {
+            var validate = captchaObj.getValidate();
+            $.ajax({
+                type: "POST",
+                url: "{% url 'data' 'login' %}",
+                data: {
+                    "email": $("#vmaig-auth-login-username").val(),
+                    "password": $("#vmaig-auth-login-password").val(),
+                    geetest_challenge: validate.geetest_challenge,
+                    geetest_validate: validate.geetest_validate,
+                    geetest_seccode: validate.geetest_seccode
+                },
+                success: function (data) {
+                    $("#mask, #popup-captcha-mobile").hide();
+                    var errors = data["errors"];
+                    var code = eval(data["code"]);
+                    if (code == 0) {
+                        location.href = geturl("next");
+                    } else {
+                        if (code == 1) {
+                            alert(errors);
+                            $("#popup-captcha-mobile").empty();
+                            gen_auth();
+                        }
+                        if (code == 2) {
+                            if (confirm("为了账号安全，请先修改邮箱和密码。") == true)
+                                location.href = "{% url 'change_email' %}";
+                            else
+                                location.href = geturl("next");
+                        }
+                    }
+                }
+            });
+        });
+    };
+
+    function gen_auth() {
+        $.ajax({
+            url: "/teetest/mobile-geetest/register?t=" + (new Date()).getTime(),
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                initGeetest({
+                    gt: data.gt,
+                    challenge: data.challenge,
+                    offline: !data.success
+                }, handlerPopupMobile);
+            }
+        });
+    }
+    gen_auth();
+</script>
+{% endblock %}

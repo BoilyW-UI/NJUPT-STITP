@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .question-box { margin-top: 20px; }
+    .question-title { font-size: 18px; margin-bottom: 25px; padding: 15px; background: #f9f9f9; border-left: 4px solid #337ab7; }
+    .option-btn { display: block; width: 100%; text-align: left; padding: 12px 20px; margin-bottom: 10px; font-size: 16px; border-radius: 4px; }
+    .option-btn:hover { background: #e6f0fa; }
+    .option-btn.selected { background: #337ab7; color: #fff; }
+    .option-btn.correct-answer { background: #5cb85c !important; color: #fff !important; }
+    .option-btn.wrong-answer { background: #d9534f !important; color: #fff !important; }
+    .option-btn:disabled { cursor: not-allowed; opacity: 0.85; }
+    .result-box { display: none; margin-top: 20px; padding: 15px; border-radius: 4px; }
+    .result-box.correct { background: #dff0d8; border: 1px solid #d6e9c6; }
+    .result-box.wrong { background: #f2dede; border: 1px solid #ebccd1; }
+    .progress-box { margin-bottom: 20px; }
+</style>
+
+<div class="question-box">
+    <div class="progress-box">
+        <p class="text-info" style="margin-bottom:8px;"><i class="fa fa-random"></i> 本轮随机抽取 10 道题，每题 1 分，满分 10 分</p>
+        <p class="text-muted">
+            已答 <strong>{{ progress.cur_answered }}/{{ progress.total }}</strong> 题
+        </p>
+        <div class="progress" style="height:10px;">
+            <div class="progress-bar progress-bar-info" style="width:{% widthratio progress.cur_answered progress.total 100 %}%;"></div>
+        </div>
+    </div>
+
+    <div class="question-title">
+        <strong>题目 {{ progress.cur_answered|add:"1" }}</strong> &nbsp; {{ question.title }}
+    </div>
+
+    <div id="options-area">
+        <button class="btn btn-default option-btn" data-value="a" onclick="selectAnswer('a')"><strong>A.</strong> {{ question.a }}</button>
+        <button class="btn btn-default option-btn" data-value="b" onclick="selectAnswer('b')"><strong>B.</strong> {{ question.b }}</button>
+        <button class="btn btn-default option-btn" data-value="c" onclick="selectAnswer('c')"><strong>C.</strong> {{ question.c }}</button>
+        <button class="btn btn-default option-btn" data-value="d" onclick="selectAnswer('d')"><strong>D.</strong> {{ question.d }}</button>
+    </div>
+
+    <div id="result-box" class="result-box"></div>
+
+    <div id="next-btn" style="display:none; margin-top:20px;">
+        <a href="?{% if assignment_id %}assignment={{ assignment_id }}{% endif %}" class="btn btn-primary btn-lg">下一题<i class="fa fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<script>
+var answered = false;
+
+function selectAnswer(val) {
+    if (answered) return;
+    answered = true;
+    $('.option-btn').prop('disabled', true);
+    $('.option-btn[data-value="' + val + '"]').addClass('selected');
+
+    $.ajax({
+        type: 'POST',
+        url: '{% url "quiz_submit" kp2.id %}',
+        data: {
+            question_id: {{ question.id }},
+            question_type: 'choice',
+            selected: val
+        },
+        dataType: 'json',
+        success: function(res) {
+            $('.option-btn[data-value="' + res.right_answer + '"]').addClass('correct-answer');
+            var rb = $('#result-box');
+            if (res.correct) {
+                rb.removeClass('wrong').addClass('correct').html('<h4><i class="fa fa-check-circle"></i> 回答正确，1 分</h4>');
+            } else {
+                $('.option-btn[data-value="' + val + '"]').addClass('wrong-answer');
+                rb.removeClass('correct').addClass('wrong').html('<h4><i class="fa fa-times-circle"></i> 回答错误，正确答案是 <strong>' + res.right_answer.toUpperCase() + '</strong></h4>');
+            }
+            if (res.explanation) {
+                rb.append('<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #ccc;font-size:14px;color:#555;"><strong><i class="fa fa-lightbulb-o"></i> 解析：</strong>' + res.explanation + '</div>');
+            }
+            rb.show();
+            if (res.done) {
+                $('#next-btn').html('<a href="?done=' + res.done + '" class="btn btn-success btn-lg">本轮完成，查看成绩<i class="fa fa-arrow-right"></i></a>');
+            }
+            $('#next-btn').show();
+        },
+        error: function() {
+            answered = false;
+            $('.option-btn').prop('disabled', false).removeClass('selected');
+            $('#result-box').removeClass('correct').addClass('wrong').html('<h4>提交失败，请稍后再试。</h4>').show();
+        }
+    });
+}
+</script>
+{% endblock %}

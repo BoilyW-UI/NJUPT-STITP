@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .done-box { text-align: center; margin-top: 50px; }
+    .done-box .fa { font-size: 80px; color: #5bc0de; margin-bottom: 20px; }
+</style>
+<div class="done-box">
+    <i class="fa fa-check-circle-o"></i>
+    <p style="font-size:18px;margin:10px 0 5px;">本次得分：<strong>{{ round_score }} / {{ round_size }}</strong></p>
+    <p style="font-size:18px;margin:0 0 25px;">历史最高分：<strong>{{ highest_correct }} / {{ round_size }}</strong></p>
+    <a href="{% url 'quiz_answer' kp2.id %}" class="btn btn-primary btn-lg" style="margin-right:10px;">再来一次</a>
+    <a href="{% url 'quiz_kp_tree' %}" class="btn btn-default btn-lg">返回知识点列表</a>
+</div>
+{% endblock %}

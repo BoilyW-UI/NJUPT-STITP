@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<a href="{% url 'quiz_teacher_kp_manage' %}" class="btn btn-default btn-sm">
+    <i class="fa fa-arrow-left"></i> 返回知识点列表
+</a>
+<h4 class="mt-3">{{ kp2.name }} — 题目列表（选择{{ choice_questions.count }}题 / 填空{{ ducheng_questions.count }}题）</h4>
+
+<div class="row" style="margin-top:15px;">
+    <div class="col-md-6">
+        <div class="panel panel-info">
+            <div class="panel-heading"><strong>选择题</strong></div>
+            <div class="panel-body" style="padding:0; max-height:600px; overflow-y:auto;">
+                {% for q in choice_questions %}
+                <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+                    <strong>{{ forloop.counter }}.</strong> {{ q.title }}
+                    <div style="margin-top:4px;">
+                        <span style="margin-right:10px;{% if q.right_answer == 'a' %}color:#5cb85c;font-weight:bold{% endif %}">A. {{ q.a }}</span>
+                        <span style="margin-right:10px;{% if q.right_answer == 'b' %}color:#5cb85c;font-weight:bold{% endif %}">B. {{ q.b }}</span>
+                        <span style="margin-right:10px;{% if q.right_answer == 'c' %}color:#5cb85c;font-weight:bold{% endif %}">C. {{ q.c }}</span>
+                        <span style="{% if q.right_answer == 'd' %}color:#5cb85c;font-weight:bold{% endif %}">D. {{ q.d }}</span>
+                    </div>
+                </div>
+                {% empty %}<div style="padding:15px;" class="text-muted">暂无选择题</div>{% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel panel-warning">
+            <div class="panel-heading"><strong>填空题</strong></div>
+            <div class="panel-body" style="padding:0; max-height:600px; overflow-y:auto;">
+                {% for q in ducheng_questions %}
+                <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+                    <strong>{{ forloop.counter }}.</strong> {{ q.title }}
+                    <br><small style="color:#5cb85c;">答案: {{ q.answer }}</small>
+                </div>
+                {% empty %}<div style="padding:15px;" class="text-muted">暂无填空题</div>{% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

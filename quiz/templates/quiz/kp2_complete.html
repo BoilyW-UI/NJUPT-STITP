@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .complete-box { text-align: center; margin-top: 50px; }
+    .complete-box .fa { font-size: 80px; color: #5cb85c; margin-bottom: 20px; }
+</style>
+<div class="complete-box">
+    <i class="fa fa-check-circle"></i>
+    <h3>恭喜，本知识点已全部完成</h3>
+    {% if next_url %}
+    <a href="{% url next_url kp2.id %}" class="btn btn-primary btn-lg" style="margin-right:10px;">
+        继续答题
+    </a>
+    {% endif %}
+    <a href="{% url 'quiz_kp_tree' %}" class="btn btn-primary btn-lg">
+        <i class="fa fa-reply"></i> 返回知识点列表
+    </a>
+</div>
+{% endblock %}
