@@ -34,6 +34,7 @@ i               role="button">重新编辑</a>
             <th>正确结果</th>
             <td>{{ problem.answer }}</td>
         </tr>
+        <tr><th>题目解析</th><td>{{ problem.explanation|linebreaksbr }}</td></tr>
         <tr>
             <th>修改时间</th>
             <td>{{ problem.in_date }}</td>

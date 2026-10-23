@@ -119,6 +119,7 @@ class Problem(models.Model):
     creater = models.ForeignKey(MyUser)
     problem_type = models.CharField(verbose_name='题目类型',max_length=10,default="编程")
     sample_code = models.TextField('初始代码', blank=True, null=True)
+    explanation = models.TextField('题目解析', max_length=2000, blank=True, null=True)
 
     def __str__(self):
         return self.title

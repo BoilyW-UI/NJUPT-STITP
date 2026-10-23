@@ -47,6 +47,7 @@
             <th>正确选项</th>
             <td>{{ problem.right_answer|upper }}</td>
         </tr>
+        <tr><th>题目解析</th><td>{{ problem.explanation|linebreaksbr }}</td></tr>
         <tr>
             <th>修改时间</th>
             <td>{{ problem.in_date }}</td>

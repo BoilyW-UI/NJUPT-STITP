@@ -6,6 +6,7 @@ from judge.models import Problem, ClassName, KnowledgePoint2, ChoiceProblem, Duc
 
 
 class ProblemAddForm(forms.Form):
+    explanation = forms.CharField(label='题目解析', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '5'}), required=False)
     title = forms.CharField(label='标题', widget=forms.TextInput(
         attrs={'class': 'form-control', 'data-validation': 'required', 'data-validation-error-msg': "请输入题目标题"}))
     description = forms.CharField(label='题目描述', widget=forms.Textarea(
@@ -36,6 +37,7 @@ class ProblemAddForm(forms.Form):
 
     def save(self, user, problemid=None):
         cd = self.cleaned_data
+        explanation = cd['explanation']
         title = cd['title']
         description = cd['description']
         input = cd['input']
@@ -64,6 +66,7 @@ class ProblemAddForm(forms.Form):
             problem.knowledgePoint1.clear()
             problem.knowledgePoint2.clear()
             problem.program = program
+            problem.explanation = explanation
         else:
             problem = Problem(
                 title=title,
@@ -80,6 +83,7 @@ class ProblemAddForm(forms.Form):
                 problem_type="编程",
                 program=program
             )
+        problem.explanation = explanation
         problem.save()
         for point in keypoint:
             problem.knowledgePoint2.add(KnowledgePoint2.objects.get(pk=point))
@@ -104,6 +108,7 @@ class ChoiceAddForm(forms.Form):
     d = forms.CharField(max_length=200, widget=forms.Textarea(
         attrs={'class': 'form-control', 'required': 'required', 'rows': '3'}))
     selection = forms.ChoiceField(widget=forms.RadioSelect(), choices=CHOICES)
+    explanation = forms.CharField(label='题目解析', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '5'}), required=False)
 
     classname = forms.ModelChoiceField(label='所属课程', queryset=ClassName.objects.all(),
                                        widget=forms.Select(attrs={'class': 'form-control'}), required=False)
@@ -113,6 +118,7 @@ class ChoiceAddForm(forms.Form):
 
     def save(self, user, id=None):
         cd = self.cleaned_data
+        explanation = cd['explanation']
         keypoint = cd['keypoint'].split(',')
         if id:
             with transaction.atomic():
@@ -123,6 +129,7 @@ class ChoiceAddForm(forms.Form):
                 choiceProblem.b = cd['b']
                 choiceProblem.d = cd['d']
                 choiceProblem.right_answer = cd['selection']
+                choiceProblem.explanation = explanation
                 #choiceProblem.creater = user
                 choiceProblem.classname.clear()
                 choiceProblem.knowledgePoint1.clear()
@@ -138,10 +145,12 @@ class ChoiceAddForm(forms.Form):
             choiceProblem.knowledgePoint1.add(point.upperPoint)
         for point in choiceProblem.knowledgePoint1.all():
             choiceProblem.classname.add(point.classname)
+        choiceProblem.explanation = explanation
         choiceProblem.save()
         return choiceProblem
 
 class GaicuoProblemAddForm(forms.Form):
+    explanation = forms.CharField(label='题目解析', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '5'}), required=False)
     title = forms.CharField(label='标题', widget=forms.TextInput(
         attrs={'class': 'form-control', 'data-validation': 'required', 'data-validation-error-msg': "请输入题目标题"}))
     description = forms.CharField(label='题目描述', widget=forms.Textarea(
@@ -174,6 +183,7 @@ class GaicuoProblemAddForm(forms.Form):
 
     def save(self, user, problemid=None):
         cd = self.cleaned_data
+        explanation = cd['explanation']
         title = cd['title']
         description = cd['description']
         input = cd['input']
@@ -202,6 +212,7 @@ class GaicuoProblemAddForm(forms.Form):
             problem.knowledgePoint1.clear()
             problem.knowledgePoint2.clear()
             problem.sample_code = sample_code
+            problem.explanation = explanation
         else:
             problem = Problem(
                 title=title,
@@ -218,6 +229,7 @@ class GaicuoProblemAddForm(forms.Form):
 		problem_type="改错",
                 sample_code=sample_code
             )
+        problem.explanation = explanation
         problem.save()
         for point in keypoint:
             problem.knowledgePoint2.add(KnowledgePoint2.objects.get(pk=point))
@@ -225,10 +237,12 @@ class GaicuoProblemAddForm(forms.Form):
             problem.knowledgePoint1.add(point.upperPoint)
         for point in problem.knowledgePoint1.all():
             problem.classname.add(point.classname)
+        problem.explanation = explanation
         problem.save()
         return problem
 
 class DuchengProblemAddForm(forms.Form):
+    explanation = forms.CharField(label='题目解析', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '5'}), required=False)
     title = forms.CharField(label='题干', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '3'}),
                              required=False)
     #description = forms.CharField(label='问题描述', widget=forms.Textarea(
@@ -243,6 +257,7 @@ class DuchengProblemAddForm(forms.Form):
 
     def save(self, user, problemid=None):
         cd = self.cleaned_data
+        explanation = cd['explanation']
         title = cd['title']
         #description = cd['description']
         answer = cd['answer']
@@ -251,6 +266,7 @@ class DuchengProblemAddForm(forms.Form):
             problem = DuchengProblem.objects.get(pk=problemid)
             problem.title = title
             problem.answer = answer
+            problem.explanation = explanation
             problem.creater = user
             problem.knowledgePoint1.clear()
             problem.knowledgePoint2.clear()
@@ -263,6 +279,7 @@ class DuchengProblemAddForm(forms.Form):
                 creater=user,
                 #description=description
             )
+        problem.explanation = explanation
         problem.save()
         for point in keypoint:
             problem.knowledgePoint2.add(KnowledgePoint2.objects.get(pk=point))
@@ -274,6 +291,7 @@ class DuchengProblemAddForm(forms.Form):
         return problem
 
 class TiankongProblemAddForm(forms.Form):
+    explanation = forms.CharField(label='题目解析', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': '5'}), required=False)
     title = forms.CharField(label='标题', widget=forms.TextInput(
         attrs={'class': 'form-control', 'data-validation': 'required', 'data-validation-error-msg': "请输入题目标题"}))
     description = forms.CharField(label='题目描述', widget=forms.Textarea(
@@ -306,6 +324,7 @@ class TiankongProblemAddForm(forms.Form):
 
     def save(self, user, problemid=None):
         cd = self.cleaned_data
+        explanation = cd['explanation']
         title = cd['title']
         description = cd['description']
         input = cd['input']
@@ -334,6 +353,7 @@ class TiankongProblemAddForm(forms.Form):
             problem.knowledgePoint1.clear()
             problem.knowledgePoint2.clear()
             problem.sample_code = sample_code
+            problem.explanation = explanation
         else:
             problem = Problem(
                 title=title,

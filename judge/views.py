@@ -327,6 +327,7 @@ def update_problem(request, id):
                'input': problem.input,
                'output': problem.output,
                'program': problem.program,
+               'explanation': problem.explanation,
                'sample_input1': problem.sample_input,
                'sample_output1': problem.sample_output,
                'sample_input2': problem.sample_input2,
@@ -369,6 +370,7 @@ def update_choice_problem(request,id):
                'c': problem.c,
                'd': problem.d,
                'selection': problem.right_answer,
+               'explanation': problem.explanation,
                'classname': 0,
                'keypoint': json.dumps(json_dic, ensure_ascii=False).encode('utf8')
                }  # 生成表单的初始化数据
@@ -395,6 +397,7 @@ def update_gaicuo(request, id):
                'input': problem.input,
                'output': problem.output,
                'sample_code': problem.sample_code,
+               'explanation': problem.explanation,
                'sample_input1': problem.sample_input,
                'sample_output1': problem.sample_output,
                'sample_input2': problem.sample_input2,
@@ -434,6 +437,7 @@ def update_ducheng(request, id='0'):
     initial = {'title': problem.title,
                 #'description': problem.description,
                'answer': problem.answer,
+               'explanation': problem.explanation,
                'classname': 0,
                'keypoint': json.dumps(json_dic, ensure_ascii=False).encode('utf8')
                }  # 生成表单的初始化数据
@@ -460,6 +464,7 @@ def update_tiankong(request, id):
                'input': problem.input,
                'output': problem.output,
                'sample_code':problem.sample_code,
+               'explanation': problem.explanation,
                'sample_input1': problem.sample_input,
                'sample_output1': problem.sample_output,
                'sample_input2': problem.sample_input2,

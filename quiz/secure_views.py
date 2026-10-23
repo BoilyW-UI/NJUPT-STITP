@@ -121,13 +121,26 @@ def kp_tree(request):
     for course in _student_courses(request.user):
         kp1_list = []
         course_prev_complete = True
-        for idx, kp1 in enumerate(course.knowledgepoint1_set.all()):
+        # Keep legacy chapters for historical records, but display only the
+        # requested 1..10 taxonomy in numeric order for the Python course.
+        primary_points = list(course.knowledgepoint1_set.filter(
+            name__regex=r'^(?:[1-9]|10)\. '
+        ))
+        primary_points.sort(key=lambda point: int(point.name.split('.', 1)[0]))
+        for idx, kp1 in enumerate(primary_points):
             kp2_list = []
             kp1_correct = 0
             kp1_answered = 0
             kp1_total = 0
             prev_complete = course_prev_complete
-            for kp2 in kp1.knowledgepoint2_set.all():
+            secondary_points = list(kp1.knowledgepoint2_set.filter(
+                name__regex=r'^(?:[1-9]|10)\.'
+            ))
+            secondary_points.sort(key=lambda point: tuple(
+                int(part) if part.isdigit() else 0
+                for part in point.name.split('.', 2)[:2]
+            ))
+            for kp2 in secondary_points:
                 total = _kp2_total_questions(kp2)
                 all_recs = AnswerRecord.objects.filter(user=request.user, kp2=kp2)
                 round_size = _kp2_round_size(kp2)
@@ -152,7 +165,9 @@ def kp_tree(request):
                 if total > 0:
                     prev_complete = prev_complete and (completed_rounds >= 1)
             course_prev_complete = prev_complete
-            if kp2_list:
+            # Keep every taxonomy chapter visible, including chapters whose
+            # questions have not been imported yet.
+            if secondary_points:
                 kp1_list.append({
                     'id': kp1.id, 'name': kp1.name, 'kp2s': kp2_list,
                     'index': idx + 1,
@@ -161,13 +176,13 @@ def kp_tree(request):
                     'total_qs': kp1_total,
                     'show_ellipsis': False,
                 })
-        if len(kp1_list) > 3:
-            for i, kp1_item in enumerate(kp1_list):
-                kp1_item['hidden'] = (i >= 3)
-            kp1_list[2]['show_ellipsis'] = True
-            kp1_list[2]['remaining'] = len(kp1_list) - 3
         if kp1_list:
-            course_data.append({'id': course.id, 'name': course.name, 'kp1s': kp1_list})
+            course_data.append({
+                'id': course.id,
+                'name': course.name,
+                'kp1s': kp1_list,
+                'visible_kp1s': kp1_list,
+            })
 
     return render(request, 'quiz/kp_tree.html', {
         'title': '自主练习',
