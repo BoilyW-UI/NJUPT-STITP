@@ -121,25 +121,13 @@ def kp_tree(request):
     for course in _student_courses(request.user):
         kp1_list = []
         course_prev_complete = True
-        # Keep legacy chapters for historical records, but display only the
-        # requested 1..10 taxonomy in numeric order for the Python course.
-        primary_points = list(course.knowledgepoint1_set.filter(
-            name__regex=r'^(?:[1-9]|10)\. '
-        ))
-        primary_points.sort(key=lambda point: int(point.name.split('.', 1)[0]))
-        for idx, kp1 in enumerate(primary_points):
+        for idx, kp1 in enumerate(course.knowledgepoint1_set.all()):
             kp2_list = []
             kp1_correct = 0
             kp1_answered = 0
             kp1_total = 0
             prev_complete = course_prev_complete
-            secondary_points = list(kp1.knowledgepoint2_set.filter(
-                name__regex=r'^(?:[1-9]|10)\.'
-            ))
-            secondary_points.sort(key=lambda point: tuple(
-                int(part) if part.isdigit() else 0
-                for part in point.name.split('.', 2)[:2]
-            ))
+            secondary_points = list(kp1.knowledgepoint2_set.all().order_by('id'))
             for kp2 in secondary_points:
                 total = _kp2_total_questions(kp2)
                 all_recs = AnswerRecord.objects.filter(user=request.user, kp2=kp2)
@@ -167,15 +155,14 @@ def kp_tree(request):
             course_prev_complete = prev_complete
             # Keep every taxonomy chapter visible, including chapters whose
             # questions have not been imported yet.
-            if secondary_points:
-                kp1_list.append({
-                    'id': kp1.id, 'name': kp1.name, 'kp2s': kp2_list,
-                    'index': idx + 1,
-                    'total_correct': kp1_correct,
-                    'total_answered': kp1_answered,
-                    'total_qs': kp1_total,
-                    'show_ellipsis': False,
-                })
+            kp1_list.append({
+                'id': kp1.id, 'name': kp1.name, 'kp2s': kp2_list,
+                'index': idx + 1,
+                'total_correct': kp1_correct,
+                'total_answered': kp1_answered,
+                'total_qs': kp1_total,
+                'show_ellipsis': False,
+            })
         if kp1_list:
             course_data.append({
                 'id': course.id,
@@ -184,10 +171,23 @@ def kp_tree(request):
                 'visible_kp1s': kp1_list,
             })
 
+    # Show one course at a time; switch via ?course_id=<id>.
+    all_courses = [{'id': c['id'], 'name': c['name']} for c in course_data]
+    active_course = None
+    if course_data:
+        requested_id = request.GET.get('course_id')
+        try:
+            requested_id = int(requested_id) if requested_id else None
+        except (TypeError, ValueError):
+            requested_id = None
+        active_course = next(
+            (c for c in course_data if c['id'] == requested_id), course_data[0])
+
     return render(request, 'quiz/kp_tree.html', {
         'title': '自主练习',
         'position': 'quiz_kp_tree',
-        'course_data': course_data,
+        'active_course': active_course,
+        'all_courses': all_courses,
         'need_join_class': False,
         'total_points': AnswerRecord.objects.filter(user=request.user, is_correct=True).count(),
     })
