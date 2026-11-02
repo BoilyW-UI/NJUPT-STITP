@@ -11,7 +11,10 @@
         overflow: visible !important;
     }
     html, body { overflow-y: auto !important; overflow-x: hidden !important; }
-    #container, #main-content, .wrapper, .showback { width: 100%; }
+    #container, .wrapper, .showback { width: 100%; }
+    /* Let #main-content fill the space after the 210px sidebar instead of
+       forcing 100% width, which overflows the viewport and clips its right edge. */
+    #main-content { width: auto; }
     #main-content, .wrapper, .showback {
         box-sizing: border-box;
         min-width: 0;
@@ -76,6 +79,39 @@
     .chapter-nav a:hover { color: #fff; background: #337ab7; }
     .course-card { border: 2px solid #337ab7; border-radius: 8px; padding: 20px; margin-bottom: 30px; background: #fff; }
     .course-card h3 { margin: 0 0 18px 0; color: #337ab7; }
+    /* Course switcher: a small "选择其他课程" link beside the course title
+       that opens a dropdown of the student's other courses. */
+    .course-switcher { position: relative; display: inline-block; margin-left: 14px; vertical-align: middle; }
+    .course-switcher-toggle { font-size: 12px; font-weight: normal; color: #888; text-decoration: none; cursor: pointer; }
+    .course-switcher-toggle:hover { color: #337ab7; }
+    .course-menu {
+        display: none;
+        position: absolute;
+        top: 22px;
+        left: 0;
+        z-index: 2000;
+        min-width: 200px;
+        max-height: 320px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        padding: 4px 0;
+        text-align: left;
+    }
+    .course-menu.open { display: block; }
+    .course-menu a {
+        display: block;
+        padding: 7px 14px;
+        color: #333;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: normal;
+        white-space: nowrap;
+    }
+    .course-menu a:hover { background: #e8f4ff; color: #337ab7; }
+    .course-menu a.active { color: #337ab7; font-weight: 700; background: #f0f7ff; }
     .kp1-divider { width: 100%; display: flex; align-items: center; margin: 10px 0 8px 0; }
     .kp1-divider:first-child { margin-top: 0; }
     .kp1-tag { display: inline-block; padding: 6px 14px; background: #337ab7; color: #fff; border-radius: 16px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
@@ -93,12 +129,22 @@
 </style>
 
 <div class="kp-tree-viewport">
-{% for course in course_data %}
+{% if active_course %}
 <div class="course-card">
-    <h3><i class="fa fa-book"></i> {{ course.name }}</h3>
+    <h3>
+        <i class="fa fa-book"></i> {{ active_course.name }}
+        <span class="course-switcher">
+            <a href="javascript:void(0)" class="course-switcher-toggle" onclick="toggleCourseMenu(event)">选择其他课程 <i class="fa fa-caret-down"></i></a>
+            <div class="course-menu" id="course-menu">
+                {% for c in all_courses %}
+                <a href="?course_id={{ c.id }}" class="{% if c.id == active_course.id %}active{% endif %}">{{ c.name }}</a>
+                {% endfor %}
+            </div>
+        </span>
+    </h3>
 
     <div class="kp-chapter-list">
-        {% for kp1 in course.visible_kp1s %}
+        {% for kp1 in active_course.visible_kp1s %}
           {% if not kp1.hidden %}
             <section class="kp1-section" id="chapter-{{ kp1.id }}">
                 <div class="kp1-divider">
@@ -123,6 +169,11 @@
                             </div>
                             {% endif %}
                         </div>
+                    {% empty %}
+                        <div class="kp2-card" style="cursor:default;border-style:dashed;color:#999;justify-content:center;">
+                            <h6 style="height:auto;">暂无题目</h6>
+                            <div class="stats">题目待导入</div>
+                        </div>
                     {% endfor %}
                 </div>
             </section>
@@ -130,11 +181,22 @@
         {% endfor %}
     </div>
 </div>
-{% endfor %}
-
-</div>
-
-{% if not course_data %}
+{% else %}
 <div class="alert alert-info">暂无课程数据。请先加入班级，或联系管理员添加课程、知识点和题目。</div>
 {% endif %}
+</div>
+
+<script>
+function toggleCourseMenu(e) {
+    if (e) e.stopPropagation();
+    var menu = document.getElementById('course-menu');
+    if (menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    var menu = document.getElementById('course-menu');
+    if (menu && e.target && !e.target.closest('.course-switcher')) {
+        menu.classList.remove('open');
+    }
+});
+</script>
 {% endblock %}
